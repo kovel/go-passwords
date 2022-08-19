@@ -50,10 +50,11 @@ func main() {
 		decryptedText := AESDecrypt(encryptedData, []byte(pp))
 		clipboard.WriteAll(string(decryptedText))
 	} else {
-		plainText, err := readPassword("Enter password: ")
+		plainText, err := readPassword("\nEnter password: ")
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalf("\n%v\n", err)
 		}
+		fmt.Println()
 
 		encryptedData := AESEncrypt(plainText, []byte(pp))
 		encryptedString := base64.StdEncoding.EncodeToString(encryptedData)
@@ -81,7 +82,7 @@ func main() {
 			log.Fatalln(err)
 		}
 
-		log.Println(n)
+		log.Printf("Store bytes: %d\n", n)
 	}
 }
 
