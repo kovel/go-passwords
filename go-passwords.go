@@ -12,6 +12,7 @@ import (
 	"golang.org/x/term"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -21,6 +22,7 @@ const initialVector = "eochiefeNg8eb8ba"
 
 func main() {
 	isDecode := flag.Bool("decode", false, "decode")
+	gen := flag.Bool("gen", false, "gen")
 	name := flag.String("name", "", "name")
 	flag.Parse()
 
@@ -50,11 +52,23 @@ func main() {
 		decryptedText := AESDecrypt(encryptedData, []byte(pp))
 		clipboard.WriteAll(string(decryptedText))
 	} else {
-		plainText, err := readPassword("\nEnter password: ")
-		if err != nil {
-			log.Fatalf("\n%v\n", err)
+		var plainText string
+		if !*gen {
+			plainText, err = readPassword("\nEnter password: ")
+			if err != nil {
+				log.Fatalf("\n%v\n", err)
+			}
+			fmt.Println()
+		} else {
+			cmd := exec.Command("pwgen", "20", "1")
+			out, err := cmd.Output()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			plainText = string(out)
+			clipboard.WriteAll(plainText)
 		}
-		fmt.Println()
 
 		encryptedData := AESEncrypt(plainText, []byte(pp))
 		encryptedString := base64.StdEncoding.EncodeToString(encryptedData)
