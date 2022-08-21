@@ -29,13 +29,14 @@ func main() {
 	name := flag.String("name", "", "name")
 	flag.Parse()
 
-	_, err := os.Open(securePropertiesFile)
+	f, err := os.Open(securePropertiesFile)
 	if os.IsNotExist(err) {
 		_, err := os.Create(securePropertiesFile)
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
+	defer f.Close()
 
 	props := properties.MustLoadFile(securePropertiesFile, properties.UTF8)
 
@@ -55,11 +56,13 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// autofix size of passcode
 	if len(pp) >= 16 {
 		pp = pp[:16]
 	} else {
 		pp += strings.Repeat("0", 16-len(pp))
 	}
+	
 	if *isDecode {
 		encryptedPassword, ok := props.Get(*name)
 		if !ok {
