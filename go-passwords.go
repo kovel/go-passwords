@@ -20,6 +20,7 @@ import (
 )
 
 const initialVector = "eochiefeNg8eb8ba"
+const securePropertiesFile = "./secure.properties"
 
 func main() {
 	isDecode := flag.Bool("decode", false, "decode")
@@ -28,7 +29,15 @@ func main() {
 	name := flag.String("name", "", "name")
 	flag.Parse()
 
-	props := properties.MustLoadFile("./secure.properties", properties.UTF8)
+	_, err := os.Open(securePropertiesFile)
+	if os.IsNotExist(err) {
+		_, err := os.Create(securePropertiesFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	props := properties.MustLoadFile(securePropertiesFile, properties.UTF8)
 
 	if *list {
 		keys := props.Keys()
