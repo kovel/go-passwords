@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 )
@@ -22,9 +23,23 @@ const initialVector = "eochiefeNg8eb8ba"
 
 func main() {
 	isDecode := flag.Bool("decode", false, "decode")
+	list := flag.Bool("list", false, "list")
 	gen := flag.Bool("gen", false, "gen")
 	name := flag.String("name", "", "name")
 	flag.Parse()
+
+	props := properties.MustLoadFile("./secure.properties", properties.UTF8)
+
+	if *list {
+		keys := props.Keys()
+		sort.Slice(keys[:], func(i, j int) bool {
+			return keys[i] < keys[j]
+		})
+		for _, key := range keys {
+			fmt.Printf("- %s\n", key)
+		}
+		os.Exit(0)
+	}
 
 	pp, err := readPassword("Enter encryption key: ")
 	if err != nil {
@@ -36,8 +51,6 @@ func main() {
 	} else {
 		pp += strings.Repeat("0", 16-len(pp))
 	}
-
-	props := properties.MustLoadFile("./secure.properties", properties.UTF8)
 	if *isDecode {
 		encryptedPassword, ok := props.Get(*name)
 		if !ok {
