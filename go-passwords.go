@@ -62,7 +62,7 @@ func main() {
 	} else {
 		pp += strings.Repeat("0", 16-len(pp))
 	}
-	
+
 	if *isDecode {
 		encryptedPassword, ok := props.Get(*name)
 		if !ok {
@@ -85,7 +85,7 @@ func main() {
 			}
 			fmt.Println()
 		} else {
-			cmd := exec.Command("pwgen", "20", "1")
+			cmd := exec.Command("pwgen", "-y", "20", "1")
 			out, err := cmd.Output()
 			if err != nil {
 				log.Fatalln(err)
