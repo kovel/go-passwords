@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"encoding/base64"
 	"flag"
 	"fmt"
 	"github.com/atotto/clipboard"
 	"github.com/magiconair/properties"
 	"golang.org/x/term"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -21,13 +23,30 @@ import (
 
 const initialVector = "eochiefeNg8eb8ba"
 const securePropertiesFile = "./secure.properties"
+const pwdFile = "./pwd.txt"
 
 func main() {
 	isDecode := flag.Bool("decode", false, "decode")
 	list := flag.Bool("list", false, "list")
+	setPwd := flag.Bool("set-pwd", false, "set-pwd")
 	gen := flag.Bool("gen", false, "gen")
 	name := flag.String("name", "", "name")
 	flag.Parse()
+
+	if *setPwd {
+		pp, err := readPassword("Enter encryption key: ")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		f, err := os.OpenFile(pwdFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer f.Close()
+		io.WriteString(f, fmt.Sprintf("%x", md5.Sum([]byte(pp))))
+		return
+	}
 
 	f, err := os.Open(securePropertiesFile)
 	if os.IsNotExist(err) {
@@ -54,6 +73,20 @@ func main() {
 	pp, err := readPassword("Enter encryption key: ")
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	f2, err := os.Open(pwdFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	data, err := io.ReadAll(f2)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if string(data) != fmt.Sprintf("%x", md5.Sum([]byte(pp))) {
+		log.Fatalln("Wrong encryption key")
 	}
 
 	// autofix size of passcode
